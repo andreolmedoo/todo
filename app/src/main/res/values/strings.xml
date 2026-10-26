@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">todo</string>
+    <string name="tasks_title">Minhas tarefas</string>
+    <string name="search_hint">Buscar pelo título</string>
+    <string name="pending_only">Mostrar somente pendentes</string>
+    <string name="add_task">Adicionar tarefa</string>
+    <string name="empty_tasks">Nenhuma tarefa encontrada</string>
+    <string name="initial_progress">0 de 0 tarefas concluídas</string>
+
+    <string name="new_task">Nova tarefa</string>
+    <string name="edit_task">Editar tarefa</string>
+    <string name="title_hint">Título da tarefa</string>
+    <string name="description_hint">Descrição</string>
+    <string name="select_date">Selecionar prazo</string>
+    <string name="completed">Concluída</string>
+    <string name="save">Salvar</string>
+    <string name="delete">Excluir</string>
+</resources>
