@@ -1,4 +1,4 @@
-# TaskFlow
+# ToDo
 
 Aplicativo Android de tarefas com persistência local em SQLite, desenvolvido para o App 02 da disciplina de Desenvolvimento para Dispositivos Móveis.
 
