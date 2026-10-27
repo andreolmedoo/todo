@@ -22,16 +22,18 @@ class DBHelper(context: Context) : SQLiteOpenHelper(
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // Version 1 is the initial schema. Add non-destructive migrations here
-        // before increasing DATABASE_VERSION in future versions.
-        if (oldVersion < 1) {
-            db.execSQL(CREATE_TASKS_TABLE)
+        // Version 2 added the priority column, keeping the existing rows.
+        if (oldVersion < 2) {
+            db.execSQL(
+                "ALTER TABLE $TABLE_TASKS ADD COLUMN $COLUMN_PRIORITY " +
+                    "INTEGER NOT NULL DEFAULT 2"
+            )
         }
     }
 
     companion object {
         const val DATABASE_NAME = "todo.db"
-        const val DATABASE_VERSION = 1
+        const val DATABASE_VERSION = 2
 
         const val TABLE_TASKS = "tasks"
         const val COLUMN_ID = "id"
@@ -39,6 +41,7 @@ class DBHelper(context: Context) : SQLiteOpenHelper(
         const val COLUMN_DESCRIPTION = "description"
         const val COLUMN_DUE_DATE = "due_date"
         const val COLUMN_COMPLETED = "completed"
+        const val COLUMN_PRIORITY = "priority"
 
         private const val CREATE_TASKS_TABLE = """
             CREATE TABLE IF NOT EXISTS $TABLE_TASKS (
@@ -47,7 +50,9 @@ class DBHelper(context: Context) : SQLiteOpenHelper(
                 $COLUMN_DESCRIPTION TEXT NOT NULL DEFAULT '',
                 $COLUMN_DUE_DATE TEXT NOT NULL DEFAULT '',
                 $COLUMN_COMPLETED INTEGER NOT NULL DEFAULT 0
-                    CHECK($COLUMN_COMPLETED IN (0, 1))
+                    CHECK($COLUMN_COMPLETED IN (0, 1)),
+                $COLUMN_PRIORITY INTEGER NOT NULL DEFAULT 2
+                    CHECK($COLUMN_PRIORITY IN (1, 2, 3))
             )
         """
     }

@@ -39,7 +39,8 @@ class TaskDAOTest {
                 title = "Entregar trabalho",
                 description = "Finalizar o aplicativo",
                 dueDate = "2026-10-30",
-                completed = false
+                completed = false,
+                priority = Task.PRIORITY_HIGH
             )
         )
 
@@ -49,6 +50,7 @@ class TaskDAOTest {
         assertEquals("Entregar trabalho", saved?.title)
         assertEquals("Finalizar o aplicativo", saved?.description)
         assertEquals("2026-10-30", saved?.dueDate)
+        assertEquals(Task.PRIORITY_HIGH, saved?.priority)
         assertFalse(saved!!.completed)
     }
 
@@ -86,9 +88,49 @@ class TaskDAOTest {
         dao.insert(Task(title = "Comprar café", completed = true))
         dao.insert(Task(title = "Estudar Kotlin", completed = false))
 
-        val result = dao.list(search = "comprar", pendingOnly = true)
+        val result = dao.list(search = "comprar", filter = TaskFilter.PENDING)
 
         assertEquals(1, result.size)
         assertEquals("Comprar pão", result.single().title)
+    }
+
+    @Test
+    fun completedFilterReturnsOnlyFinishedTasks() {
+        dao.insert(Task(title = "Pendente", completed = false))
+        dao.insert(Task(title = "Pronta", completed = true))
+
+        val result = dao.getCompleted()
+
+        assertEquals(1, result.size)
+        assertEquals("Pronta", result.single().title)
+    }
+
+    @Test
+    fun listAppliesCustomOrdering() {
+        dao.insert(Task(title = "Já concluída", completed = true, priority = Task.PRIORITY_HIGH))
+        dao.insert(Task(title = "Sem prazo", priority = Task.PRIORITY_MEDIUM))
+        dao.insert(
+            Task(title = "Prazo distante", dueDate = "2030-01-01", priority = Task.PRIORITY_MEDIUM)
+        )
+        dao.insert(
+            Task(title = "Urgente", dueDate = "2030-12-31", priority = Task.PRIORITY_HIGH)
+        )
+
+        val titles = dao.getAll().map { it.title }
+
+        assertEquals(
+            listOf("Urgente", "Prazo distante", "Sem prazo", "Já concluída"),
+            titles
+        )
+    }
+
+    @Test
+    fun countsFeedTheProgressSummary() {
+        dao.insert(Task(title = "A", completed = true))
+        dao.insert(Task(title = "B", completed = false))
+        dao.insert(Task(title = "C", completed = true))
+
+        assertEquals(3, dao.countAll())
+        assertEquals(2, dao.countCompleted())
     }
 }

@@ -21,7 +21,7 @@ class TaskDAO(context: Context) {
         return dbHelper.writableDatabase.insertOrThrow(
             DBHelper.TABLE_TASKS,
             null,
-            task.toContentValues(includeId = false)
+            task.toContentValues()
         )
     }
 
@@ -32,7 +32,7 @@ class TaskDAO(context: Context) {
 
         return dbHelper.writableDatabase.update(
             DBHelper.TABLE_TASKS,
-            task.toContentValues(includeId = false),
+            task.toContentValues(),
             "${DBHelper.COLUMN_ID} = ?",
             arrayOf(task.id.toString())
         )
@@ -66,31 +66,23 @@ class TaskDAO(context: Context) {
         }
     }
 
-    /** Returns every task, with the most recently inserted task first. */
-    fun getAll(): List<Task> = queryTasks()
+    /** Returns every task. */
+    fun getAll(): List<Task> = list()
 
     /** Performs a case-insensitive title search. */
-    fun searchByTitle(query: String): List<Task> = queryTasks(search = query)
+    fun searchByTitle(query: String): List<Task> = list(search = query)
 
     /** Returns only tasks that have not been completed. */
-    fun getPending(): List<Task> = queryTasks(pendingOnly = true)
+    fun getPending(): List<Task> = list(filter = TaskFilter.PENDING)
+
+    /** Returns only tasks that have already been completed. */
+    fun getCompleted(): List<Task> = list(filter = TaskFilter.COMPLETED)
 
     /**
      * Flexible list operation for screens that combine title search and the
-     * pending-only filter.
+     * status filter.
      */
-    fun list(search: String? = null, pendingOnly: Boolean = false): List<Task> =
-        queryTasks(search, pendingOnly)
-
-    /** Releases the database resources owned by this DAO. */
-    fun close() {
-        dbHelper.close()
-    }
-
-    private fun queryTasks(
-        search: String? = null,
-        pendingOnly: Boolean = false
-    ): List<Task> {
+    fun list(search: String? = null, filter: TaskFilter = TaskFilter.ALL): List<Task> {
         val conditions = mutableListOf<String>()
         val arguments = mutableListOf<String>()
 
@@ -99,9 +91,18 @@ class TaskDAO(context: Context) {
             arguments += "%${search.trim()}%"
         }
 
-        if (pendingOnly) {
-            conditions += "${DBHelper.COLUMN_COMPLETED} = ?"
-            arguments += "0"
+        when (filter) {
+            TaskFilter.PENDING -> {
+                conditions += "${DBHelper.COLUMN_COMPLETED} = ?"
+                arguments += "0"
+            }
+
+            TaskFilter.COMPLETED -> {
+                conditions += "${DBHelper.COLUMN_COMPLETED} = ?"
+                arguments += "1"
+            }
+
+            TaskFilter.ALL -> Unit
         }
 
         val selection = conditions.takeIf { it.isNotEmpty() }?.joinToString(" AND ")
@@ -114,26 +115,46 @@ class TaskDAO(context: Context) {
             selectionArgs,
             null,
             null,
-            "${DBHelper.COLUMN_ID} DESC"
+            ORDER_BY
         ).use { cursor ->
-            buildList {
-                while (cursor.moveToNext()) {
-                    add(cursor.toTask())
-                }
+            val tasks = mutableListOf<Task>()
+            while (cursor.moveToNext()) {
+                tasks.add(cursor.toTask())
             }
+            tasks
         }
+    }
+
+    /** Total number of tasks, used by the progress summary. */
+    fun countAll(): Int = count(null)
+
+    /** Number of completed tasks, used by the progress summary. */
+    fun countCompleted(): Int = count("${DBHelper.COLUMN_COMPLETED} = 1")
+
+    /** Releases the database resources owned by this DAO. */
+    fun close() {
+        dbHelper.close()
+    }
+
+    private fun count(selection: String?): Int {
+        val where = if (selection == null) "" else " WHERE $selection"
+        return dbHelper.readableDatabase
+            .rawQuery("SELECT COUNT(*) FROM ${DBHelper.TABLE_TASKS}$where", null)
+            .use { cursor ->
+                if (cursor.moveToFirst()) cursor.getInt(0) else 0
+            }
     }
 
     private fun validate(task: Task) {
         require(task.title.isNotBlank()) { "O título da tarefa é obrigatório." }
     }
 
-    private fun Task.toContentValues(includeId: Boolean): ContentValues = ContentValues().apply {
-        if (includeId) put(DBHelper.COLUMN_ID, id)
+    private fun Task.toContentValues(): ContentValues = ContentValues().apply {
         put(DBHelper.COLUMN_TITLE, title.trim())
-        put(DBHelper.COLUMN_DESCRIPTION, description)
-        put(DBHelper.COLUMN_DUE_DATE, dueDate)
+        put(DBHelper.COLUMN_DESCRIPTION, description.trim())
+        put(DBHelper.COLUMN_DUE_DATE, dueDate.trim())
         put(DBHelper.COLUMN_COMPLETED, if (completed) 1 else 0)
+        put(DBHelper.COLUMN_PRIORITY, Task.normalizePriority(priority))
     }
 
     private fun Cursor.toTask(): Task = Task(
@@ -141,7 +162,8 @@ class TaskDAO(context: Context) {
         title = getString(getColumnIndexOrThrow(DBHelper.COLUMN_TITLE)),
         description = getString(getColumnIndexOrThrow(DBHelper.COLUMN_DESCRIPTION)),
         dueDate = getString(getColumnIndexOrThrow(DBHelper.COLUMN_DUE_DATE)),
-        completed = getInt(getColumnIndexOrThrow(DBHelper.COLUMN_COMPLETED)) == 1
+        completed = getInt(getColumnIndexOrThrow(DBHelper.COLUMN_COMPLETED)) == 1,
+        priority = getInt(getColumnIndexOrThrow(DBHelper.COLUMN_PRIORITY))
     )
 
     companion object {
@@ -150,7 +172,18 @@ class TaskDAO(context: Context) {
             DBHelper.COLUMN_TITLE,
             DBHelper.COLUMN_DESCRIPTION,
             DBHelper.COLUMN_DUE_DATE,
-            DBHelper.COLUMN_COMPLETED
+            DBHelper.COLUMN_COMPLETED,
+            DBHelper.COLUMN_PRIORITY
         )
+
+        // Pending first, then higher priority, then closest deadline
+        // (tasks without a deadline last) and finally the title.
+        private val ORDER_BY = """
+            ${DBHelper.COLUMN_COMPLETED} ASC,
+            ${DBHelper.COLUMN_PRIORITY} DESC,
+            CASE WHEN ${DBHelper.COLUMN_DUE_DATE} = '' THEN 1 ELSE 0 END ASC,
+            ${DBHelper.COLUMN_DUE_DATE} ASC,
+            ${DBHelper.COLUMN_TITLE} COLLATE NOCASE ASC
+        """.trimIndent().replace("\n", " ")
     }
 }

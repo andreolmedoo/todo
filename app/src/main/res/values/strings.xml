@@ -1,18 +1,55 @@
 <resources>
-    <string name="app_name">todo</string>
+    <string name="app_name">TaskFlow</string>
+
+    <!-- Tela principal -->
     <string name="tasks_title">Minhas tarefas</string>
     <string name="search_hint">Buscar pelo título</string>
-    <string name="pending_only">Mostrar somente pendentes</string>
+    <string name="search">Buscar</string>
+    <string name="clear">Limpar</string>
+    <string name="filter_label">Filtro:</string>
     <string name="add_task">Adicionar tarefa</string>
     <string name="empty_tasks">Nenhuma tarefa encontrada</string>
-    <string name="initial_progress">0 de 0 tarefas concluídas</string>
+    <string name="initial_progress">0 de 0 tarefas concluídas (0%)</string>
+    <string name="progress_format">%1$d de %2$d tarefas concluídas (%3$d%%)</string>
 
+    <string-array name="task_filters">
+        <item>Todas</item>
+        <item>Pendentes</item>
+        <item>Concluídas</item>
+    </string-array>
+
+    <!-- Item da lista -->
+    <string name="item_details_with_date">Prioridade %1$s · Prazo %2$s</string>
+    <string name="item_details_without_date">Prioridade %1$s · Sem prazo</string>
+    <string name="status_pending">Pendente</string>
+    <string name="status_overdue">Atrasada</string>
+    <string name="status_completed">Concluída</string>
+
+    <!-- Formulário -->
     <string name="new_task">Nova tarefa</string>
     <string name="edit_task">Editar tarefa</string>
+    <string name="label_title">Título *</string>
+    <string name="label_description">Descrição</string>
+    <string name="label_due_date">Prazo</string>
     <string name="title_hint">Título da tarefa</string>
-    <string name="description_hint">Descrição</string>
-    <string name="select_date">Selecionar prazo</string>
+    <string name="description_hint">Detalhes da tarefa (opcional)</string>
+    <string name="due_date_hint">dd/mm/aaaa (opcional)</string>
+    <string name="priority_label">Prioridade</string>
+    <string name="priority_low">Baixa</string>
+    <string name="priority_medium">Média</string>
+    <string name="priority_high">Alta</string>
     <string name="completed">Concluída</string>
     <string name="save">Salvar</string>
     <string name="delete">Excluir</string>
+    <string name="cancel">Cancelar</string>
+
+    <!-- Mensagens -->
+    <string name="task_created">Tarefa cadastrada com sucesso</string>
+    <string name="task_updated">Tarefa atualizada com sucesso</string>
+    <string name="task_deleted">Tarefa excluída</string>
+    <string name="error_task_not_found">Tarefa não encontrada</string>
+    <string name="error_title_required">Informe o título da tarefa</string>
+    <string name="error_title_too_long">O título deve ter no máximo 100 caracteres</string>
+    <string name="error_description_too_long">A descrição deve ter no máximo 500 caracteres</string>
+    <string name="error_invalid_date">Prazo inválido. Use o formato dd/mm/aaaa</string>
 </resources>
