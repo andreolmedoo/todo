@@ -13,7 +13,7 @@ Aplicativo Android de tarefas com persistência local em SQLite, desenvolvido pa
 
 ## Sobre o projeto
 
-O TaskFlow é um aplicativo para organizar tarefas pessoais do dia a dia. Ele permite cadastrar, visualizar, editar e excluir tarefas com título, descrição, prazo, prioridade e situação. Os dados são armazenados localmente em SQLite e permanecem salvos após o aplicativo ser fechado ou o aparelho ser reiniciado.
+O ToDo é um aplicativo para organizar tarefas pessoais do dia a dia. Ele permite cadastrar, visualizar, editar e excluir tarefas com título, descrição, prazo, prioridade e situação. Os dados são armazenados localmente em SQLite e permanecem salvos após o aplicativo ser fechado ou o aparelho ser reiniciado.
 
 ## Regras de negócio, ordenação e filtros
 
